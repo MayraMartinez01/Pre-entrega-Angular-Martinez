@@ -1,0 +1,24 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-card {
+  margin: 20px auto;
+  max-width: 600px;
+  padding: 24px;
+}
+
+button {
+  margin-top: 16px;
+}
+
+.success-snackbar {
+  background-color: #4caf50;
+  color: white;
+}
+
+.error-snackbar {
+  background-color: #f44336;
+  color: white;
+}

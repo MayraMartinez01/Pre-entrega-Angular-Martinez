@@ -1,0 +1,71 @@
+<h2>Lista de Alumnos</h2>
+
+<mat-card class="tabla-alumnos">
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+    <!-- Nombre Column -->
+    <ng-container matColumnDef="nombre">
+      <th mat-header-cell *matHeaderCellDef> Nombre </th>
+      <td mat-cell *matCellDef="let alumno"> {{ alumno.nombre }} </td>
+    </ng-container>
+
+    <!-- Curso Column -->
+    <ng-container matColumnDef="curso">
+      <th mat-header-cell *matHeaderCellDef> Curso </th>
+      <td mat-cell *matCellDef="let alumno"> {{ alumno.curso }} </td>
+    </ng-container>
+
+    <!-- Email Column -->
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef> Email </th>
+      <td mat-cell *matCellDef="let alumno"> {{ alumno.email }} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+  </table>
+</mat-card>
+
+<br>
+
+<h2>Agregar Nuevo Alumno</h2>
+
+<mat-card class="formulario-alumno">
+  <form [formGroup]="formularioAlumno" (ngSubmit)="agregarAlumno()">
+
+    <mat-form-field appearance="outline" class="campo-formulario">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" required>
+      <mat-error *ngIf="formularioAlumno.get('nombre')?.hasError('required')">
+        El nombre es obligatorio
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="campo-formulario">
+      <mat-label>Curso</mat-label>
+      <input matInput formControlName="curso" required>
+      <mat-error *ngIf="formularioAlumno.get('curso')?.hasError('required')">
+        El curso es obligatorio
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="campo-formulario">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" required>
+      <mat-error *ngIf="formularioAlumno.get('email')?.hasError('required')">
+        El email es obligatorio
+      </mat-error>
+      <mat-error *ngIf="formularioAlumno.get('email')?.hasError('email')">
+        Ingrese un email válido
+      </mat-error>
+    </mat-form-field>
+
+    <br><br>
+
+    <button mat-raised-button color="primary" type="submit" [disabled]="formularioAlumno.invalid">
+      Agregar Alumno
+    </button>
+
+  </form>
+</mat-card>
