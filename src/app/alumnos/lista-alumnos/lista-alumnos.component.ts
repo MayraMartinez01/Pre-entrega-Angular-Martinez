@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
+import { AlumnoService } from '../services/alumno.service';
 
 @Component({
   selector: 'app-lista-alumnos',
@@ -26,33 +27,25 @@ import { CommonModule } from '@angular/common';
 })
 export class ListaAlumnosComponent {
   formularioAlumno: FormGroup;
-  alumnos = [
-    { nombre: 'Ana Pérez', curso: 'Angular', email: 'ana@example.com' },
-    { nombre: 'Luis Gómez', curso: 'React', email: 'luis@example.com' },
-    { nombre: 'Carla Ruiz', curso: 'Vue', email: 'carla@example.com' }
-  ];
   displayedColumns: string[] = ['nombre', 'curso', 'email'];
-  dataSource = this.alumnos;
+  dataSource: any[] = [];
 
-  constructor(private fb: FormBuilder, private snackBar: MatSnackBar) {
+  constructor(private fb: FormBuilder, private snackBar: MatSnackBar, private alumnoService: AlumnoService) {
     this.formularioAlumno = this.fb.group({
       nombre: ['', Validators.required],
       curso: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
+    });
+
+    this.alumnoService.obtenerAlumnos().subscribe(alumnos => {
+      this.dataSource = alumnos;
     });
   }
 
   agregarAlumno() {
     if (this.formularioAlumno.valid) {
       this.dataSource = [...this.dataSource, this.formularioAlumno.value];
-      this.snackBar.open(
-        `Alumno ${this.formularioAlumno.value.nombre} agregado exitosamente`,
-        'Cerrar',
-        {
-          duration: 3000,
-          verticalPosition: 'top'
-        }
-      );
+      this.snackBar.open('Alumno agregado exitosamente', 'Cerrar', { duration: 3000 });
       this.formularioAlumno.reset();
     }
   }

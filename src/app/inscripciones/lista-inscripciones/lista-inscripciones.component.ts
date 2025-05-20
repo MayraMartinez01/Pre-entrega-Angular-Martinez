@@ -6,7 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { NgIf } from '@angular/common';
+import { InscripcionService } from '../services/inscripcion.service';
 
 @Component({
   selector: 'app-lista-inscripciones',
@@ -27,18 +29,23 @@ import { CommonModule, NgIf } from '@angular/common';
 })
 export class ListaInscripcionesComponent {
   formularioInscripcion: FormGroup;
-  inscripciones = [
-    { alumno: 'Ana Pérez', curso: 'Angular', fecha: '2024-09-01' }
-  ];
   displayedColumns: string[] = ['alumno', 'curso', 'fecha', 'acciones'];
-  dataSource = this.inscripciones;
+  dataSource: any[] = [];
   editandoIndex: number | null = null;
 
-  constructor(private fb: FormBuilder, private snackBar: MatSnackBar) {
+  constructor(
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar,
+    private inscripcionService: InscripcionService
+  ) {
     this.formularioInscripcion = this.fb.group({
       alumno: ['', Validators.required],
       curso: ['', Validators.required],
       fecha: ['', Validators.required]
+    });
+
+    this.inscripcionService.obtenerInscripciones().subscribe(data => {
+      this.dataSource = data;
     });
   }
 
@@ -46,13 +53,14 @@ export class ListaInscripcionesComponent {
     if (this.formularioInscripcion.valid) {
       if (this.editandoIndex !== null) {
         this.dataSource[this.editandoIndex] = this.formularioInscripcion.value;
-        this.dataSource = [...this.dataSource];
-        this.snackBar.open('Inscripción actualizada', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('Inscripción actualizada correctamente', 'Cerrar', { duration: 3000 });
         this.editandoIndex = null;
       } else {
         this.dataSource = [...this.dataSource, this.formularioInscripcion.value];
-        this.snackBar.open('Inscripción agregada', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('Inscripción agregada correctamente', 'Cerrar', { duration: 3000 });
       }
+
+      this.dataSource = [...this.dataSource];
       this.formularioInscripcion.reset();
     }
   }

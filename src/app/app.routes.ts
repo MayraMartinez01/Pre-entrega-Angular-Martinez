@@ -4,12 +4,17 @@ export const routes: Routes = [
   {
     path: 'alumnos',
     loadChildren: () =>
-      import('./alumnos/alumnos-routing.module').then((m) => m.AlumnosRoutingModule)
+      import('./alumnos/alumnos.module').then(m => m.AlumnosModule)
   },
   {
     path: 'cursos',
     loadChildren: () =>
-      import('./cursos/cursos-routing.module').then((m) => m.CursosRoutingModule)
+      import('./cursos/cursos.module').then(m => m.CursosModule)
+  },
+  {
+    path: 'inscripciones',
+    loadChildren: () =>
+      import('./inscripciones/inscripciones.module').then(m => m.InscripcionesModule)
   },
   {
     path: '',
