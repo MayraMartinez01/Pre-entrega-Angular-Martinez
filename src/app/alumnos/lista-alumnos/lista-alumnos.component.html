@@ -1,24 +1,33 @@
 <h2>Lista de Alumnos</h2>
 
-<mat-card class="tabla-alumnos">
+<mat-card>
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
-    <!-- Nombre Column -->
+    <!-- Nombre -->
     <ng-container matColumnDef="nombre">
-      <th mat-header-cell *matHeaderCellDef> Nombre </th>
-      <td mat-cell *matCellDef="let alumno"> {{ alumno.nombre }} </td>
+      <th mat-header-cell *matHeaderCellDef>Nombre</th>
+      <td mat-cell *matCellDef="let alumno">{{ alumno.nombre }}</td>
     </ng-container>
 
-    <!-- Curso Column -->
+    <!-- Curso -->
     <ng-container matColumnDef="curso">
-      <th mat-header-cell *matHeaderCellDef> Curso </th>
-      <td mat-cell *matCellDef="let alumno"> {{ alumno.curso }} </td>
+      <th mat-header-cell *matHeaderCellDef>Curso</th>
+      <td mat-cell *matCellDef="let alumno">{{ alumno.curso }}</td>
     </ng-container>
 
-    <!-- Email Column -->
+    <!-- Email -->
     <ng-container matColumnDef="email">
-      <th mat-header-cell *matHeaderCellDef> Email </th>
-      <td mat-cell *matCellDef="let alumno"> {{ alumno.email }} </td>
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let alumno">{{ alumno.email }}</td>
+    </ng-container>
+
+    <!-- Acciones -->
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef>Acciones</th>
+      <td mat-cell *matCellDef="let alumno; let i = index">
+        <button mat-button color="accent" (click)="editarAlumno(i)">Editar</button>
+        <button mat-button color="warn" (click)="eliminarAlumno(i)">Eliminar</button>
+      </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -28,42 +37,28 @@
 
 <br>
 
-<h2>Agregar Nuevo Alumno</h2>
+<h2>Agregar / Editar Alumno</h2>
 
-<mat-card class="formulario-alumno">
+<mat-card>
   <form [formGroup]="formularioAlumno" (ngSubmit)="agregarAlumno()">
 
-    <mat-form-field appearance="outline" class="campo-formulario">
+    <mat-form-field appearance="outline">
       <mat-label>Nombre</mat-label>
       <input matInput formControlName="nombre" required>
-      <mat-error *ngIf="formularioAlumno.get('nombre')?.hasError('required')">
-        El nombre es obligatorio
-      </mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="campo-formulario">
+    <mat-form-field appearance="outline">
       <mat-label>Curso</mat-label>
       <input matInput formControlName="curso" required>
-      <mat-error *ngIf="formularioAlumno.get('curso')?.hasError('required')">
-        El curso es obligatorio
-      </mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="campo-formulario">
+    <mat-form-field appearance="outline">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" required>
-      <mat-error *ngIf="formularioAlumno.get('email')?.hasError('required')">
-        El email es obligatorio
-      </mat-error>
-      <mat-error *ngIf="formularioAlumno.get('email')?.hasError('email')">
-        Ingrese un email válido
-      </mat-error>
     </mat-form-field>
 
-    <br><br>
-
     <button mat-raised-button color="primary" type="submit" [disabled]="formularioAlumno.invalid">
-      Agregar Alumno
+      {{ editandoIndex !== null ? 'Actualizar' : 'Agregar' }}
     </button>
 
   </form>

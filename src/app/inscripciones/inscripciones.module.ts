@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { routes } from './inscripciones-routing.module';
-import { ListaInscripcionesComponent } from './lista-inscripciones/lista-inscripciones.component';
+import { CommonModule } from '@angular/common';
+import { InscripcionesRoutingModule } from './inscripciones-routing.module';
+// Si estás usando standalone components como en tu caso, NO hace falta declarar el componente aquí.
 
 @NgModule({
   imports: [
-    RouterModule.forChild(routes),
-    ListaInscripcionesComponent
+    CommonModule,
+    InscripcionesRoutingModule
   ]
 })
 export class InscripcionesModule {}

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -6,7 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { CursoService, Curso } from '../services/curso.service';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-lista-cursos',
@@ -25,17 +27,17 @@ import { CommonModule, NgIf } from '@angular/common';
   templateUrl: './lista-cursos.component.html',
   styleUrls: ['./lista-cursos.component.scss']
 })
-export class ListaCursosComponent {
+export class ListaCursosComponent implements OnInit {
   formularioCurso: FormGroup;
-  cursos = [
-    { nombre: 'Angular', duracion: '2 meses', nivel: 'Intermedio' },
-    { nombre: 'React', duracion: '1.5 meses', nivel: 'Principiante' }
-  ];
   displayedColumns: string[] = ['nombre', 'duracion', 'nivel', 'acciones'];
-  dataSource = this.cursos;
+  dataSource: Curso[] = [];
   editandoIndex: number | null = null;
 
-  constructor(private fb: FormBuilder, private snackBar: MatSnackBar) {
+  constructor(
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar,
+    private cursoService: CursoService
+  ) {
     this.formularioCurso = this.fb.group({
       nombre: ['', Validators.required],
       duracion: ['', Validators.required],
@@ -43,22 +45,34 @@ export class ListaCursosComponent {
     });
   }
 
-  guardarCurso() {
+  ngOnInit(): void {
+    this.cursoService.obtenerCursos().subscribe(cursos => {
+      this.dataSource = cursos;
+    });
+  }
+
+  guardarCurso(): void {
     if (this.formularioCurso.valid) {
+      const curso = this.formularioCurso.value;
+
       if (this.editandoIndex !== null) {
-        this.dataSource[this.editandoIndex] = this.formularioCurso.value;
-        this.dataSource = [...this.dataSource];
-        this.snackBar.open('Curso actualizado correctamente', 'Cerrar', { duration: 3000 });
-        this.editandoIndex = null;
+        this.cursoService.editarCurso(this.editandoIndex, curso).subscribe(cursos => {
+          this.dataSource = cursos;
+          this.snackBar.open('Curso actualizado correctamente', 'Cerrar', { duration: 3000 });
+          this.editandoIndex = null;
+          this.formularioCurso.reset();
+        });
       } else {
-        this.dataSource = [...this.dataSource, this.formularioCurso.value];
-        this.snackBar.open('Curso agregado exitosamente', 'Cerrar', { duration: 3000 });
+        this.cursoService.agregarCurso(curso).subscribe(cursos => {
+          this.dataSource = cursos;
+          this.snackBar.open('Curso agregado exitosamente', 'Cerrar', { duration: 3000 });
+          this.formularioCurso.reset();
+        });
       }
-      this.formularioCurso.reset();
     }
   }
 
-  editarCurso(index: number) {
+  editarCurso(index: number): void {
     const curso = this.dataSource[index];
     this.formularioCurso.setValue({
       nombre: curso.nombre,
@@ -68,9 +82,10 @@ export class ListaCursosComponent {
     this.editandoIndex = index;
   }
 
-  eliminarCurso(index: number) {
-    const eliminado = this.dataSource[index];
-    this.dataSource = this.dataSource.filter((_, i) => i !== index);
-    this.snackBar.open(`Curso ${eliminado.nombre} eliminado`, 'Cerrar', { duration: 3000 });
+  eliminarCurso(index: number): void {
+    this.cursoService.eliminarCurso(index).subscribe(cursos => {
+      this.dataSource = cursos;
+      this.snackBar.open('Curso eliminado correctamente', 'Cerrar', { duration: 3000 });
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -7,8 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
+import { InscripcionService, Inscripcion } from '../services/inscripcion.service';
 import { NgIf } from '@angular/common';
-import { InscripcionService } from '../services/inscripcion.service';
 
 @Component({
   selector: 'app-lista-inscripciones',
@@ -27,10 +27,10 @@ import { InscripcionService } from '../services/inscripcion.service';
   templateUrl: './lista-inscripciones.component.html',
   styleUrls: ['./lista-inscripciones.component.scss']
 })
-export class ListaInscripcionesComponent {
+export class ListaInscripcionesComponent implements OnInit {
   formularioInscripcion: FormGroup;
   displayedColumns: string[] = ['alumno', 'curso', 'fecha', 'acciones'];
-  dataSource: any[] = [];
+  dataSource: Inscripcion[] = [];
   editandoIndex: number | null = null;
 
   constructor(
@@ -43,29 +43,36 @@ export class ListaInscripcionesComponent {
       curso: ['', Validators.required],
       fecha: ['', Validators.required]
     });
+  }
 
-    this.inscripcionService.obtenerInscripciones().subscribe(data => {
-      this.dataSource = data;
+  ngOnInit(): void {
+    this.inscripcionService.obtenerInscripciones().subscribe(inscripciones => {
+      this.dataSource = inscripciones;
     });
   }
 
-  guardarInscripcion() {
+  guardarInscripcion(): void {
     if (this.formularioInscripcion.valid) {
-      if (this.editandoIndex !== null) {
-        this.dataSource[this.editandoIndex] = this.formularioInscripcion.value;
-        this.snackBar.open('Inscripción actualizada correctamente', 'Cerrar', { duration: 3000 });
-        this.editandoIndex = null;
-      } else {
-        this.dataSource = [...this.dataSource, this.formularioInscripcion.value];
-        this.snackBar.open('Inscripción agregada correctamente', 'Cerrar', { duration: 3000 });
-      }
+      const inscripcion = this.formularioInscripcion.value;
 
-      this.dataSource = [...this.dataSource];
-      this.formularioInscripcion.reset();
+      if (this.editandoIndex !== null) {
+        this.inscripcionService.editarInscripcion(this.editandoIndex, inscripcion).subscribe(inscripciones => {
+          this.dataSource = inscripciones;
+          this.snackBar.open('Inscripción actualizada correctamente', 'Cerrar', { duration: 3000 });
+          this.editandoIndex = null;
+          this.formularioInscripcion.reset();
+        });
+      } else {
+        this.inscripcionService.agregarInscripcion(inscripcion).subscribe(inscripciones => {
+          this.dataSource = inscripciones;
+          this.snackBar.open('Inscripción agregada exitosamente', 'Cerrar', { duration: 3000 });
+          this.formularioInscripcion.reset();
+        });
+      }
     }
   }
 
-  editarInscripcion(index: number) {
+  editarInscripcion(index: number): void {
     const inscripcion = this.dataSource[index];
     this.formularioInscripcion.setValue({
       alumno: inscripcion.alumno,
@@ -75,9 +82,10 @@ export class ListaInscripcionesComponent {
     this.editandoIndex = index;
   }
 
-  eliminarInscripcion(index: number) {
-    const eliminada = this.dataSource[index];
-    this.dataSource = this.dataSource.filter((_, i) => i !== index);
-    this.snackBar.open(`Inscripción de ${eliminada.alumno} eliminada`, 'Cerrar', { duration: 3000 });
+  eliminarInscripcion(index: number): void {
+    this.inscripcionService.eliminarInscripcion(index).subscribe(inscripciones => {
+      this.dataSource = inscripciones;
+      this.snackBar.open(`Inscripción de ${inscripciones[index]?.alumno || ''} eliminada`, 'Cerrar', { duration: 3000 });
+    });
   }
 }
