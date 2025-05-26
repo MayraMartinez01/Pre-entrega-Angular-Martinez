@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { CommonModule } from '@angular/common';
-import { AlumnoService, Alumno } from '../services/alumno.service';
-import { NgIf } from '@angular/common';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { CommonModule, NgIf } from '@angular/common';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-lista-alumnos',
@@ -22,21 +21,22 @@ import { NgIf } from '@angular/common';
     MatButtonModule,
     MatCardModule,
     MatSnackBarModule,
-    NgIf
+    NgIf // ✅ Importado correctamente
   ],
   templateUrl: './lista-alumnos.component.html',
   styleUrls: ['./lista-alumnos.component.scss']
 })
 export class ListaAlumnosComponent implements OnInit {
   formularioAlumno: FormGroup;
-  displayedColumns: string[] = ['nombre', 'curso', 'email', 'acciones'];
-  dataSource: Alumno[] = [];
+  displayedColumns: string[] = ['nombre', 'curso', 'email'];
+  dataSource: any[] = [];
   editandoIndex: number | null = null;
+  rol: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private alumnoService: AlumnoService
+    private authService: AuthService
   ) {
     this.formularioAlumno = this.fb.group({
       nombre: ['', Validators.required],
@@ -46,29 +46,24 @@ export class ListaAlumnosComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.alumnoService.obtenerAlumnos().subscribe(alumnos => {
-      this.dataSource = alumnos;
-    });
+    this.rol = this.authService.obtenerRol();
+    if (this.rol === 'admin') {
+      this.displayedColumns.push('acciones');
+    }
   }
 
   agregarAlumno(): void {
     if (this.formularioAlumno.valid) {
-      const alumno = this.formularioAlumno.value;
-
       if (this.editandoIndex !== null) {
-        this.alumnoService.editarAlumno(this.editandoIndex, alumno).subscribe(alumnos => {
-          this.dataSource = alumnos;
-          this.snackBar.open('Alumno actualizado correctamente', 'Cerrar', { duration: 3000 });
-          this.editandoIndex = null;
-          this.formularioAlumno.reset();
-        });
+        this.dataSource[this.editandoIndex] = this.formularioAlumno.value;
+        this.snackBar.open('Alumno actualizado correctamente', 'Cerrar', { duration: 3000 });
+        this.editandoIndex = null;
       } else {
-        this.alumnoService.agregarAlumno(alumno).subscribe(alumnos => {
-          this.dataSource = alumnos;
-          this.snackBar.open('Alumno agregado exitosamente', 'Cerrar', { duration: 3000 });
-          this.formularioAlumno.reset();
-        });
+        this.dataSource.push(this.formularioAlumno.value);
+        this.snackBar.open('Alumno agregado exitosamente', 'Cerrar', { duration: 3000 });
       }
+      this.dataSource = [...this.dataSource];
+      this.formularioAlumno.reset();
     }
   }
 
@@ -83,9 +78,10 @@ export class ListaAlumnosComponent implements OnInit {
   }
 
   eliminarAlumno(index: number): void {
-    this.alumnoService.eliminarAlumno(index).subscribe(alumnos => {
-      this.dataSource = alumnos;
-      this.snackBar.open('Alumno eliminado', 'Cerrar', { duration: 3000 });
-    });
+    this.dataSource.splice(index, 1);
+    this.dataSource = [...this.dataSource];
+    this.snackBar.open('Alumno eliminado correctamente', 'Cerrar', { duration: 3000 });
+    this.formularioAlumno.reset();
+    this.editandoIndex = null;
   }
 }

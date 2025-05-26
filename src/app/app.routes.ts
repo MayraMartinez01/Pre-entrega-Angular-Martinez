@@ -1,28 +1,35 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './login/login.component';
+import { AdminGuard } from './auth/admin.guard';
+import { UserGuard } from './auth/user.guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    component: LoginComponent
+  },
+  {
     path: 'alumnos',
-    loadChildren: () =>
-      import('./alumnos/alumnos.module').then(m => m.AlumnosModule)
+    canActivate: [AdminGuard],
+    loadChildren: () => import('./alumnos/alumnos.module').then(m => m.AlumnosModule)
   },
   {
     path: 'cursos',
-    loadChildren: () =>
-      import('./cursos/cursos.module').then(m => m.CursosModule)
+    canActivate: [AdminGuard],
+    loadChildren: () => import('./cursos/cursos.module').then(m => m.CursosModule)
   },
   {
     path: 'inscripciones',
-    loadChildren: () =>
-      import('./inscripciones/inscripciones.module').then(m => m.InscripcionesModule)
+    canActivate: [UserGuard],
+    loadChildren: () => import('./inscripciones/inscripciones.module').then(m => m.InscripcionesModule)
   },
   {
     path: '',
-    redirectTo: 'alumnos',
+    redirectTo: 'login',
     pathMatch: 'full'
   },
   {
     path: '**',
-    redirectTo: 'alumnos'
+    redirectTo: 'login'
   }
 ];
