@@ -1,87 +1,89 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
-import { AuthService } from '../../auth/auth.service';
+import { MatTableModule, MatTableDataSource, MatTable } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+
+import { AlumnoService, Alumno } from '../services/alumno.service';
+// ✅ ESTA LÍNEA ES CRÍTICA:
+import { AlumnoFormComponent } from '../components/alumno-form.component';
 
 @Component({
   selector: 'app-lista-alumnos',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
-    MatCardModule,
+    MatIconModule,
+    MatDialogModule,
     MatSnackBarModule,
-    NgIf // ✅ Importado correctamente
+    MatCardModule,
+    NgIf
   ],
   templateUrl: './lista-alumnos.component.html',
   styleUrls: ['./lista-alumnos.component.scss']
 })
+// ✅ ESTA LÍNEA ES CRÍTICA:
 export class ListaAlumnosComponent implements OnInit {
-  formularioAlumno: FormGroup;
-  displayedColumns: string[] = ['nombre', 'curso', 'email'];
-  dataSource: any[] = [];
-  editandoIndex: number | null = null;
-  rol: string | null = null;
+
+  @ViewChild(MatTable) table!: MatTable<any>;
+
+  displayedColumns: string[] = ['nombre', 'apellido', 'email', 'acciones'];
+  dataSource = new MatTableDataSource<Alumno>();
 
   constructor(
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar,
-    private authService: AuthService
-  ) {
-    this.formularioAlumno = this.fb.group({
-      nombre: ['', Validators.required],
-      curso: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
-    });
-  }
+    private alumnoService: AlumnoService,
+    public dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) { }
 
   ngOnInit(): void {
-    this.rol = this.authService.obtenerRol();
-    if (this.rol === 'admin') {
-      this.displayedColumns.push('acciones');
-    }
+    this.cargarAlumnos();
   }
 
-  agregarAlumno(): void {
-    if (this.formularioAlumno.valid) {
-      if (this.editandoIndex !== null) {
-        this.dataSource[this.editandoIndex] = this.formularioAlumno.value;
-        this.snackBar.open('Alumno actualizado correctamente', 'Cerrar', { duration: 3000 });
-        this.editandoIndex = null;
-      } else {
-        this.dataSource.push(this.formularioAlumno.value);
-        this.snackBar.open('Alumno agregado exitosamente', 'Cerrar', { duration: 3000 });
-      }
-      this.dataSource = [...this.dataSource];
-      this.formularioAlumno.reset();
-    }
-  }
-
-  editarAlumno(index: number): void {
-    const alumno = this.dataSource[index];
-    this.formularioAlumno.setValue({
-      nombre: alumno.nombre,
-      curso: alumno.curso,
-      email: alumno.email
+  cargarAlumnos(): void {
+    this.alumnoService.getAlumnos().subscribe(alumnos => {
+      this.dataSource.data = alumnos;
     });
-    this.editandoIndex = index;
   }
 
-  eliminarAlumno(index: number): void {
-    this.dataSource.splice(index, 1);
-    this.dataSource = [...this.dataSource];
-    this.snackBar.open('Alumno eliminado correctamente', 'Cerrar', { duration: 3000 });
-    this.formularioAlumno.reset();
-    this.editandoIndex = null;
+  openAddEditDialog(alumno?: Alumno): void {
+    const dialogRef = this.dialog.open(AlumnoFormComponent, {
+      data: alumno,
+      width: '400px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (alumno && alumno.id) {
+          this.alumnoService.updateAlumno(result).subscribe(() => {
+            this.snackBar.open('Alumno actualizado con éxito', 'Cerrar', { duration: 2000 });
+            this.cargarAlumnos();
+          });
+        } else {
+          this.alumnoService.addAlumno(result).subscribe(() => {
+            this.snackBar.open('Alumno agregado con éxito', 'Cerrar', { duration: 2000 });
+            this.cargarAlumnos();
+          });
+        }
+      }
+    });
+  }
+
+  editAlumno(alumno: Alumno): void {
+    this.openAddEditDialog(alumno);
+  }
+
+  deleteAlumno(id: string): void {
+    if (confirm('¿Estás segura de que querés eliminar este alumno?')) {
+      this.alumnoService.deleteAlumno(id).subscribe(() => {
+        this.snackBar.open('Alumno eliminado con éxito', 'Cerrar', { duration: 2000 });
+        this.cargarAlumnos();
+      });
+    }
   }
 }

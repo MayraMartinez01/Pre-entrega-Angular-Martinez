@@ -1,43 +1,55 @@
+// src/app/cursos/lista-cursos/lista-cursos.component.ts
+
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
-import { CursoService, Curso } from '../services/curso.service';
-import { NgIf } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms'; // ✅ Importar ReactiveFormsModule, FormBuilder, etc.
+import { MatTableModule, MatTableDataSource } from '@angular/material/table'; // ✅ Importar MatTableModule y MatTableDataSource
+import { MatCardModule } from '@angular/material/card'; // ✅ Importar MatCardModule
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon'; // Si usas íconos
+import { MatInputModule } from '@angular/material/input'; // ✅ Importar MatInputModule
+import { MatFormFieldModule } from '@angular/material/form-field'; // ✅ Importar MatFormFieldModule
+
+// Asumo que tienes un servicio de cursos y una interfaz Curso
+// import { CursoService, Curso } from '../services/curso.service';
+
+interface Curso { // Define la interfaz Curso si no la tienes en un servicio
+  id: string;
+  nombre: string;
+  duracion: string;
+  nivel: string;
+}
 
 @Component({
   selector: 'app-lista-cursos',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
+    MatTableModule,        // ✅ Añadir MatTableModule
+    MatCardModule,         // ✅ Añadir MatCardModule
     MatButtonModule,
-    MatCardModule,
-    MatSnackBarModule,
-    NgIf
+    MatIconModule,         // Si usas MatIcon
+    MatInputModule,        // ✅ Añadir MatInputModule
+    MatFormFieldModule,    // ✅ Añadir MatFormFieldModule
+    ReactiveFormsModule    // ✅ Añadir ReactiveFormsModule
   ],
   templateUrl: './lista-cursos.component.html',
   styleUrls: ['./lista-cursos.component.scss']
 })
 export class ListaCursosComponent implements OnInit {
-  formularioCurso: FormGroup;
-  displayedColumns: string[] = ['nombre', 'duracion', 'nivel', 'acciones'];
-  dataSource: Curso[] = [];
-  editandoIndex: number | null = null;
 
+  // ✅ PROPIEDADES NECESARIAS
+  displayedColumns: string[] = ['nombre', 'duracion', 'nivel', 'acciones']; // Ajusta según tus columnas
+  dataSource = new MatTableDataSource<Curso>();
+  formularioCurso: FormGroup; // ✅ Propiedad del formulario
+  editandoCursoId: string | null = null; // ✅ Para saber si estamos editando o agregando
+
+  // Asumo que inyectas un servicio de cursos
   constructor(
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar,
-    private cursoService: CursoService
+    private fb: FormBuilder, // ✅ Inyectar FormBuilder
+    // private cursoService: CursoService // Descomentar si tienes un servicio de cursos
   ) {
+    // ✅ Inicializar el formulario
     this.formularioCurso = this.fb.group({
       nombre: ['', Validators.required],
       duracion: ['', Validators.required],
@@ -45,47 +57,79 @@ export class ListaCursosComponent implements OnInit {
     });
   }
 
+  // ✅ MÉTODO ngOnInit
   ngOnInit(): void {
-    this.cursoService.obtenerCursos().subscribe(cursos => {
-      this.dataSource = cursos;
-    });
+    this.cargarCursos();
   }
 
+  // ✅ MÉTODO cargarCursos (ejemplo, adapta a tu servicio)
+  cargarCursos(): void {
+    // Ejemplo de datos dummy si no tienes un servicio de cursos aún
+    const dummyCursos: Curso[] = [
+      { id: '1', nombre: 'Angular Básico', duracion: '40 horas', nivel: 'Principiante' },
+      { id: '2', nombre: 'TypeScript Avanzado', duracion: '30 horas', nivel: 'Avanzado' }
+    ];
+    this.dataSource.data = dummyCursos;
+
+    // Si tuvieras un servicio real:
+    // this.cursoService.getCursos().subscribe(cursos => {
+    //   this.dataSource.data = cursos;
+    // });
+  }
+
+  // ✅ MÉTODO guardarCurso
   guardarCurso(): void {
     if (this.formularioCurso.valid) {
-      const curso = this.formularioCurso.value;
+      const nuevoCurso: Curso = {
+        ...this.formularioCurso.value,
+        id: this.editandoCursoId || Math.random().toString(36).substring(2, 11) // Genera ID si es nuevo
+      };
 
-      if (this.editandoIndex !== null) {
-        this.cursoService.editarCurso(this.editandoIndex, curso).subscribe(cursos => {
-          this.dataSource = cursos;
-          this.snackBar.open('Curso actualizado correctamente', 'Cerrar', { duration: 3000 });
-          this.editandoIndex = null;
-          this.formularioCurso.reset();
-        });
+      if (this.editandoCursoId) {
+        // Lógica de actualización
+        // this.cursoService.updateCurso(nuevoCurso).subscribe(() => {
+        //   this.cargarCursos();
+        //   this.limpiarFormulario();
+        // });
+        const index = this.dataSource.data.findIndex(c => c.id === nuevoCurso.id);
+        if (index !== -1) {
+          this.dataSource.data[index] = nuevoCurso;
+          this.dataSource._updateChangeSubscription(); // Para refrescar la tabla
+        }
+        console.log('Curso actualizado:', nuevoCurso);
       } else {
-        this.cursoService.agregarCurso(curso).subscribe(cursos => {
-          this.dataSource = cursos;
-          this.snackBar.open('Curso agregado exitosamente', 'Cerrar', { duration: 3000 });
-          this.formularioCurso.reset();
-        });
+        // Lógica de adición
+        // this.cursoService.addCurso(nuevoCurso).subscribe(() => {
+        //   this.cargarCursos();
+        //   this.limpiarFormulario();
+        // });
+        this.dataSource.data = [...this.dataSource.data, nuevoCurso];
+        console.log('Curso agregado:', nuevoCurso);
       }
+      this.limpiarFormulario();
     }
   }
 
-  editarCurso(index: number): void {
-    const curso = this.dataSource[index];
-    this.formularioCurso.setValue({
-      nombre: curso.nombre,
-      duracion: curso.duracion,
-      nivel: curso.nivel
-    });
-    this.editandoIndex = index;
+  // ✅ MÉTODO editarCurso
+  editarCurso(curso: Curso): void {
+    this.editandoCursoId = curso.id;
+    this.formularioCurso.patchValue(curso);
   }
 
-  eliminarCurso(index: number): void {
-    this.cursoService.eliminarCurso(index).subscribe(cursos => {
-      this.dataSource = cursos;
-      this.snackBar.open('Curso eliminado correctamente', 'Cerrar', { duration: 3000 });
-    });
+  // ✅ MÉTODO eliminarCurso
+  eliminarCurso(id: string): void {
+    if (confirm('¿Estás seguro de que quieres eliminar este curso?')) {
+      // this.cursoService.deleteCurso(id).subscribe(() => {
+      //   this.cargarCursos();
+      // });
+      this.dataSource.data = this.dataSource.data.filter(c => c.id !== id);
+      console.log('Curso eliminado:', id);
+    }
+  }
+
+  // ✅ Método para limpiar el formulario
+  limpiarFormulario(): void {
+    this.formularioCurso.reset();
+    this.editandoCursoId = null;
   }
 }

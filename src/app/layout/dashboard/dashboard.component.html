@@ -1,0 +1,42 @@
+<div style="padding: 20px;">
+  <h1>Bienvenido al Dashboard</h1>
+  <p>Contenido principal de tu aplicación. Aquí podrás ver un resumen o acceder a las diferentes secciones.</p>
+
+  <nav>
+    <h2>Navegación:</h2>
+    <ul>
+      <li>
+        <button mat-raised-button color="primary" [routerLink]="['/admin', 'alumnos']">
+          <mat-icon>group</mat-icon> Ir a Alumnos
+        </button>
+      </li>
+      <br>
+      <li>
+        <button mat-raised-button color="accent" [routerLink]="['/admin', 'cursos']">
+          <mat-icon>school</mat-icon> Ir a Cursos
+        </button>
+      </li>
+      <br>
+      <li>
+        <button mat-raised-button color="warn" [routerLink]="['/admin', 'inscripciones']">
+          <mat-icon>assignment</mat-icon> Ir a Inscripciones
+        </button>
+      </li>
+      <br>
+      <li>
+        <button mat-raised-button [routerLink]="['/user', 'cursos']">
+          <mat-icon>person</mat-icon> Ver Mis Cursos (Usuario)
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <hr>
+
+  <div>
+    <button mat-raised-button color="default" (click)="onLogout()">
+      <mat-icon>exit_to_app</mat-icon> Cerrar Sesión
+    </button>
+  </div>
+
+</div>

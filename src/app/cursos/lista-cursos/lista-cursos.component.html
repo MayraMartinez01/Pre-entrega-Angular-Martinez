@@ -20,9 +20,8 @@
 
     <ng-container matColumnDef="acciones">
       <th mat-header-cell *matHeaderCellDef>Acciones</th>
-      <td mat-cell *matCellDef="let curso; let i = index">
-        <button mat-button color="accent" (click)="editarCurso(i)">Editar</button>
-        <button mat-button color="warn" (click)="eliminarCurso(i)">Eliminar</button>
+      <td mat-cell *matCellDef="let curso"> <button mat-button color="accent" (click)="editarCurso(curso)">Editar</button>
+        <button mat-button color="warn" (click)="eliminarCurso(curso.id)">Eliminar</button>
       </td>
     </ng-container>
 
@@ -53,7 +52,6 @@
     </mat-form-field>
 
     <button mat-raised-button color="primary" type="submit" [disabled]="formularioCurso.invalid">
-      {{ editandoIndex !== null ? 'Actualizar Curso' : 'Agregar Curso' }}
-    </button>
+      {{ editandoCursoId !== null ? 'Actualizar Curso' : 'Agregar Curso' }} </button>
   </form>
 </mat-card>

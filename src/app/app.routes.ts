@@ -1,35 +1,64 @@
+// src/app/app.routes.ts
+
 import { Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
-import { AdminGuard } from './auth/admin.guard';
-import { UserGuard } from './auth/user.guard';
+// Importamos los guards con sus nombres EXACTOS, en minúsculas, como funciones
+import { adminGuard } from './auth/admin.guard';
+import { userGuard } from './auth/user.guard';
 
 export const routes: Routes = [
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-  {
-    path: 'alumnos',
-    canActivate: [AdminGuard],
-    loadChildren: () => import('./alumnos/alumnos.module').then(m => m.AlumnosModule)
-  },
-  {
-    path: 'cursos',
-    canActivate: [AdminGuard],
-    loadChildren: () => import('./cursos/cursos.module').then(m => m.CursosModule)
-  },
-  {
-    path: 'inscripciones',
-    canActivate: [UserGuard],
-    loadChildren: () => import('./inscripciones/inscripciones.module').then(m => m.InscripcionesModule)
-  },
   {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'
   },
   {
+    path: 'login',
+    loadComponent: () => import('./login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'dashboard',
+    canActivate: [userGuard], // Usamos el guard en minúscula como una función
+    loadComponent: () => import('./layout/dashboard/dashboard.component').then(m => m.DashboardComponent)
+  },
+  {
+    path: 'admin',
+    canActivate: [userGuard, adminGuard], // Usamos los guards en minúscula como funciones
+    children: [
+      {
+        path: 'alumnos',
+        loadChildren: () => import('./alumnos/alumnos.routes').then(r => r.ALUMNOS_ROUTES)
+      },
+      {
+        path: 'cursos',
+        loadChildren: () => import('./cursos/cursos.routes').then(r => r.CURSOS_ROUTES)
+      },
+      {
+        path: 'inscripciones',
+        loadChildren: () => import('./inscripciones/inscripciones.routes').then(r => r.INSCRIPCIONES_ROUTES)
+      },
+      {
+        path: '**',
+        redirectTo: 'alumnos'
+      }
+    ]
+  },
+  {
+    path: 'user',
+    canActivate: [userGuard], // Usamos el guard en minúscula como una función
+    children: [
+      {
+        path: 'cursos',
+        loadChildren: () => import('./cursos/cursos.routes').then(r => r.CURSOS_ROUTES_FOR_USER)
+      },
+      {
+        path: '**',
+        redirectTo: 'cursos'
+      }
+    ]
+  },
+  {
     path: '**',
-    redirectTo: 'login'
+    redirectTo: 'login',
+    pathMatch: 'full'
   }
 ];

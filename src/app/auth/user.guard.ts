@@ -1,17 +1,22 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
+// src/app/auth/user.guard.ts
+
+import { CanActivateFn, Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
-@Injectable({ providedIn: 'root' })
-export class UserGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
+export const userGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-  canActivate(): boolean {
-    const usuario = this.authService.obtenerUsuario();
-    if (usuario?.rol === 'user') {
-      return true;
-    }
-    this.router.navigate(['/login']);
-    return false;
-  }
-}
+  return authService.userLoggedIn$.pipe( // Usa el Observable userLoggedIn$
+    map(user => {
+      if (user && (user.role === 'admin' || user.role === 'user')) {
+        return true;
+      } else {
+        router.navigate(['/login']);
+        return false;
+      }
+    })
+  );
+};

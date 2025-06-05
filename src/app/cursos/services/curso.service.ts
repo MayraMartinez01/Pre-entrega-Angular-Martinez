@@ -1,7 +1,11 @@
+// src/app/cursos/services/curso.service.ts
+
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http'; // Importamos HttpClient
+import { Observable } from 'rxjs'; // Necesitamos Observable para las operaciones HTTP
 
 export interface Curso {
+  id?: string; // mockapi.io añade un ID, lo hacemos opcional para crear
   nombre: string;
   duracion: string;
   nivel: string;
@@ -11,27 +15,33 @@ export interface Curso {
   providedIn: 'root'
 })
 export class CursoService {
-  private cursos: Curso[] = [
-    { nombre: 'Angular', duracion: '2 meses', nivel: 'Intermedio' },
-    { nombre: 'React', duracion: '1.5 meses', nivel: 'Principiante' }
-  ];
+  private apiUrl = 'https://683f2faf1cd60dca33de9085.mockapi.io/v1/cursos'; // Tu endpoint de cursos en mockapi.io
+
+  constructor(private http: HttpClient) { }
 
   obtenerCursos(): Observable<Curso[]> {
-    return of(this.cursos);
+    return this.http.get<Curso[]>(this.apiUrl);
   }
 
-  agregarCurso(curso: Curso): Observable<Curso[]> {
-    this.cursos.push(curso);
-    return of(this.cursos);
+  agregarCurso(curso: Omit<Curso, 'id'>): Observable<Curso> { // Agregamos Omit para que no esperes 'id' al crear
+    // Cuando agregas, mockapi.io te devuelve el objeto creado con su ID
+    return this.http.post<Curso>(this.apiUrl, curso);
   }
 
-  eliminarCurso(index: number): Observable<Curso[]> {
-    this.cursos.splice(index, 1);
-    return of(this.cursos);
+  // Ahora editamos por ID, no por índice
+  editarCurso(id: string, curso: Curso): Observable<Curso> {
+    // mockapi.io espera un PUT al recurso específico por ID
+    return this.http.put<Curso>(`${this.apiUrl}/${id}`, curso); // <<-- ¡CORRECCIÓN AQUÍ!
   }
 
-  editarCurso(index: number, curso: Curso): Observable<Curso[]> {
-    this.cursos[index] = curso;
-    return of(this.cursos);
+  // Ahora eliminamos por ID, no por índice
+  eliminarCurso(id: string): Observable<void> {
+    // mockapi.io espera un DELETE al recurso específico por ID
+    return this.http.delete<void>(`${this.apiUrl}/${id}`); // <<-- ¡CORRECCIÓN AQUÍ!
+  }
+
+  // Opcional: Si necesitas obtener un solo curso por ID
+  obtenerCursoPorId(id: string): Observable<Curso> {
+    return this.http.get<Curso>(`${this.apiUrl}/${id}`); // <<-- ¡CORRECCIÓN AQUÍ!
   }
 }

@@ -1,28 +1,32 @@
-import { Component } from '@angular/core';
+// src/app/login/login.component.ts
+
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
+
+import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  templateUrl: './login.component.html',
-  // styleUrls: ['./login.component.scss'], // ❌ Quitado porque no existe el archivo
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
+    MatCardModule,
     MatInputModule,
     MatButtonModule,
-    MatCardModule
-  ]
+    MatFormFieldModule
+  ],
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
 
   constructor(
@@ -31,26 +35,28 @@ export class LoginComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      usuario: ['', Validators.required],
-      password: ['', Validators.required]
+      usuario: ['', Validators.required], // <-- Aquí se llama 'usuario'
+      password: ['', Validators.required] // <-- Aquí se llama 'password'
     });
   }
 
-  login(): void {
-    if (this.loginForm.valid) {
-      const { usuario, password } = this.loginForm.value;
-      const success = this.authService.login(usuario, password);
-
-      if (success) {
-        const rol = this.authService.obtenerUsuario()?.rol;
-        if (rol === 'admin') {
-          this.router.navigate(['/alumnos']);
-        } else if (rol === 'user') {
-          this.router.navigate(['/inscripciones']);
-        }
-      } else {
-        alert('Credenciales inválidas');
+  ngOnInit(): void {
+    this.authService.userLoggedIn$.subscribe(user => {
+      if (user) {
+        this.router.navigate(['/dashboard']);
       }
+    });
+  }
+
+  onSubmit(): void {
+    if (this.loginForm.valid) {
+      // Desestructuración DEBE usar 'usuario' y 'password'
+      const { usuario, password } = this.loginForm.value;
+      this.authService.login(usuario, password).subscribe(success => {
+        if (!success) {
+          alert('Credenciales inválidas');
+        }
+      });
     }
   }
 }
