@@ -2,25 +2,23 @@
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms'; // ✅ Importar ReactiveFormsModule, FormBuilder, etc.
-import { MatTableModule, MatTableDataSource } from '@angular/material/table'; // ✅ Importar MatTableModule y MatTableDataSource
-import { MatCardModule } from '@angular/material/card'; // ✅ Importar MatCardModule
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon'; // Si usas íconos
-import { MatInputModule } from '@angular/material/input'; // ✅ Importar MatInputModule
-import { MatFormFieldModule } from '@angular/material/form-field'; // ✅ Importar MatFormFieldModule
-import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos si es necesario
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { v4 as uuidv4 } from 'uuid';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // ✅ Importar MatDialog y MatDialogModule
 
-// Asumo que tienes un servicio de inscripciones y una interfaz Inscripcion
-// También asumo que tienes interfaces para Alumno y Curso si las usas.
-// import { InscripcionService, Inscripcion } from '../services/inscripcion.service';
-// import { Alumno } from '../../alumnos/services/alumno.service';
-// import { Curso } from '../../cursos/services/curso.service';
+import { InscripcionFormComponent } from '../components/inscripcion-form.component'; // ✅ Importar el nuevo componente
 
-interface Inscripcion { // Define la interfaz Inscripcion
+interface Inscripcion {
   id: string;
-  alumno: string; // O el tipo de Alumno completo
-  curso: string;  // O el tipo de Curso completo
+  alumno: string;
+  curso: string;
   fecha: string;
 }
 
@@ -29,114 +27,90 @@ interface Inscripcion { // Define la interfaz Inscripcion
   standalone: true,
   imports: [
     CommonModule,
-    MatTableModule,         // ✅ Añadir MatTableModule
-    MatCardModule,          // ✅ Añadir MatCardModule
+    MatTableModule,
+    MatCardModule,
     MatButtonModule,
-    MatIconModule,          // Si usas MatIcon
-    MatInputModule,         // ✅ Añadir MatInputModule
-    MatFormFieldModule,     // ✅ Añadir MatFormFieldModule
-    ReactiveFormsModule     // ✅ Añadir ReactiveFormsModule
+    MatIconModule,
+    MatInputModule,
+    MatFormFieldModule,
+    ReactiveFormsModule,
+    MatSnackBarModule,
+    MatDialogModule // ✅ Añadir MatDialogModule a los imports
   ],
   templateUrl: './lista-inscripciones.component.html',
   styleUrls: ['./lista-inscripciones.component.scss']
 })
 export class ListaInscripcionesComponent implements OnInit {
 
-  // ✅ PROPIEDADES NECESARIAS
-  displayedColumns: string[] = ['alumno', 'curso', 'fecha', 'acciones']; // Ajusta según tus columnas
+  displayedColumns: string[] = ['alumno', 'curso', 'fecha', 'acciones'];
   dataSource = new MatTableDataSource<Inscripcion>();
-  formularioInscripcion: FormGroup; // ✅ Propiedad del formulario
-  editandoIndex: string | null = null; // ✅ Para saber si estamos editando o agregando (o un ID)
+  // Ya no necesitas formularioInscripcion ni editandoIndex aquí si usas el diálogo
+  // formularioInscripcion: FormGroup;
+  // editandoIndex: string | null = null;
 
-  // Asumo que inyectas un servicio de inscripciones
   constructor(
-    private fb: FormBuilder, // ✅ Inyectar FormBuilder
-    // private inscripcionService: InscripcionService // Descomentar si tienes un servicio de inscripciones
+    // private fb: FormBuilder, // Ya no necesitas FormBuilder aquí
+    private snackBar: MatSnackBar,
+    public dialog: MatDialog // ✅ Inyectar MatDialog
   ) {
-    // ✅ Inicializar el formulario
-    this.formularioInscripcion = this.fb.group({
-      alumno: ['', Validators.required],
-      curso: ['', Validators.required],
-      fecha: ['', Validators.required] // Considera usar MatDatepicker si es una fecha real
-    });
+    // this.formularioInscripcion = this.fb.group(...) // Ya no necesitas inicializar aquí
   }
 
-  // ✅ MÉTODO ngOnInit
   ngOnInit(): void {
     this.cargarInscripciones();
   }
 
-  // ✅ MÉTODO cargarInscripciones (ejemplo, adapta a tu servicio)
   cargarInscripciones(): void {
-    // Ejemplo de datos dummy
     const dummyInscripciones: Inscripcion[] = [
       { id: uuidv4(), alumno: 'Juan Pérez', curso: 'Angular Básico', fecha: '2023-01-15' },
       { id: uuidv4(), alumno: 'María Gómez', curso: 'TypeScript Avanzado', fecha: '2023-02-20' }
     ];
     this.dataSource.data = dummyInscripciones;
-
-    // Si tuvieras un servicio real:
-    // this.inscripcionService.getInscripciones().subscribe(inscripciones => {
-    //   this.dataSource.data = inscripciones;
-    // });
   }
 
-  // ✅ MÉTODO guardarInscripcion
-  guardarInscripcion(): void {
-    if (this.formularioInscripcion.valid) {
-      const nuevaInscripcion: Inscripcion = {
-        ...this.formularioInscripcion.value,
-        id: this.editandoIndex || uuidv4() // Genera ID si es nueva
-      };
+  // ✅ Nuevo método para abrir el diálogo de agregar/editar
+  openAddEditDialog(inscripcion?: Inscripcion): void {
+    const dialogRef = this.dialog.open(InscripcionFormComponent, {
+      data: inscripcion, // Pasa la inscripción si es para editar
+      width: '400px'
+    });
 
-      if (this.editandoIndex) {
-        // Lógica de actualización
-        // this.inscripcionService.updateInscripcion(nuevaInscripcion).subscribe(() => {
-        //   this.cargarInscripciones();
-        //   this.limpiarFormulario();
-        // });
-        const index = this.dataSource.data.findIndex(i => i.id === nuevaInscripcion.id);
-        if (index !== -1) {
-          this.dataSource.data[index] = nuevaInscripcion;
-          this.dataSource._updateChangeSubscription(); // Para refrescar la tabla
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) { // Si se guardó algo
+        if (inscripcion && inscripcion.id) {
+          // Lógica para actualizar (en tu caso, con datos dummy)
+          const index = this.dataSource.data.findIndex(i => i.id === result.id);
+          if (index !== -1) {
+            this.dataSource.data[index] = result;
+            this.dataSource._updateChangeSubscription();
+            this.snackBar.open('Inscripción actualizada con éxito', 'Cerrar', { duration: 2000 });
+          }
+        } else {
+          // Lógica para agregar (en tu caso, con datos dummy)
+          const nuevaInscripcion: Inscripcion = { ...result, id: uuidv4() }; // Asegurar un ID
+          this.dataSource.data = [...this.dataSource.data, nuevaInscripcion];
+          this.dataSource._updateChangeSubscription(); // Refrescar la tabla
+          this.snackBar.open('Inscripción agregada con éxito', 'Cerrar', { duration: 2000 });
         }
-        console.log('Inscripción actualizada:', nuevaInscripcion);
-      } else {
-        // Lógica de adición
-        // this.inscripcionService.addInscripcion(nuevaInscripcion).subscribe(() => {
-        //   this.cargarInscripciones();
-        //   this.limpiarFormulario();
-        // });
-        this.dataSource.data = [...this.dataSource.data, nuevaInscripcion];
-        console.log('Inscripción agregada:', nuevaInscripcion);
       }
-      this.limpiarFormulario();
-    }
+    });
   }
 
-  // ✅ MÉTODO editarInscripcion
-  editarInscripcion(id: string): void { // Cambié index por id, es más robusto
-    const inscripcionAEditar = this.dataSource.data.find(i => i.id === id);
-    if (inscripcionAEditar) {
-      this.editandoIndex = id;
-      this.formularioInscripcion.patchValue(inscripcionAEditar);
-    }
+  // ✅ Modificar el método editarInscripcion para usar el diálogo
+  editInscripcion(inscripcion: Inscripcion): void {
+    this.openAddEditDialog(inscripcion);
   }
 
-  // ✅ MÉTODO eliminarInscripcion
-  eliminarInscripcion(id: string): void { // Cambié index por id
+  // ✅ Modificar el método eliminarInscripcion para forzar el refresco de la tabla
+  deleteInscripcion(id: string): void {
     if (confirm('¿Estás seguro de que quieres eliminar esta inscripción?')) {
-      // this.inscripcionService.deleteInscripcion(id).subscribe(() => {
-      //   this.cargarInscripciones();
-      // });
       this.dataSource.data = this.dataSource.data.filter(i => i.id !== id);
-      console.log('Inscripción eliminada:', id);
+      this.dataSource._updateChangeSubscription(); // ✅ FUERZA EL REFRESCO DE LA TABLA
+      this.snackBar.open('Inscripción eliminada con éxito', 'Cerrar', { duration: 2000 });
     }
   }
 
-  // ✅ Método para limpiar el formulario
-  limpiarFormulario(): void {
-    this.formularioInscripcion.reset();
-    this.editandoIndex = null;
-  }
+  // Los métodos guardarInscripcion y limpiarFormulario ya no son necesarios aquí si usas el diálogo
+  // guardarInscripcion(): void { ... }
+  // limpiarFormulario(): void { ... }
 }

@@ -1,61 +1,41 @@
-<h2>Lista de Inscripciones</h2>
-
 <mat-card>
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-
-    <ng-container matColumnDef="alumno">
-      <th mat-header-cell *matHeaderCellDef>Alumno</th>
-      <td mat-cell *matCellDef="let i">{{ i.alumno }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="curso">
-      <th mat-header-cell *matHeaderCellDef>Curso</th>
-      <td mat-cell *matCellDef="let i">{{ i.curso }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="fecha">
-      <th mat-header-cell *matHeaderCellDef>Fecha</th>
-      <td mat-cell *matCellDef="let i">{{ i.fecha }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="acciones">
-      <th mat-header-cell *matHeaderCellDef>Acciones</th>
-      <td mat-cell *matCellDef="let i; let index = index">
-        <button mat-button color="accent" (click)="editarInscripcion(index)">Editar</button>
-        <button mat-button color="warn" (click)="eliminarInscripcion(index)">Eliminar</button>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
-</mat-card>
-
-<br>
-
-<h2>Agregar / Editar Inscripción</h2>
-
-<mat-card>
-  <form [formGroup]="formularioInscripcion" (ngSubmit)="guardarInscripcion()">
-
-    <mat-form-field appearance="outline">
-      <mat-label>Alumno</mat-label>
-      <input matInput formControlName="alumno" required>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Curso</mat-label>
-      <input matInput formControlName="curso" required>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Fecha</mat-label>
-      <input matInput formControlName="fecha" type="date" required>
-    </mat-form-field>
-
-    <button mat-raised-button color="primary" type="submit" [disabled]="formularioInscripcion.invalid">
-      {{ editandoIndex !== null ? 'Actualizar' : 'Agregar' }}
+  <mat-card-header>
+    <mat-card-title>Lista de Inscripciones</mat-card-title>
+    <button mat-raised-button color="primary" (click)="openAddEditDialog()">
+      <mat-icon>add</mat-icon> Agregar Inscripción
     </button>
+  </mat-card-header>
+  <mat-card-content>
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 full-width-table">
+      <ng-container matColumnDef="alumno">
+        <th mat-header-cell *matHeaderCellDef> Alumno </th>
+        <td mat-cell *matCellDef="let element"> {{element.alumno}} </td>
+      </ng-container>
 
-  </form>
+      <ng-container matColumnDef="curso">
+        <th mat-header-cell *matHeaderCellDef> Curso </th>
+        <td mat-cell *matCellDef="let element"> {{element.curso}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="fecha">
+        <th mat-header-cell *matHeaderCellDef> Fecha </th>
+        <td mat-cell *matCellDef="let element"> {{element.fecha}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+        <td mat-cell *matCellDef="let element">
+          <button mat-icon-button color="accent" (click)="openAddEditDialog(element)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteInscripcion(element.id)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </mat-card-content>
 </mat-card>

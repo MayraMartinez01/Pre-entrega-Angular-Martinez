@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>{{ data ? 'Editar Inscripción' : 'Agregar Inscripción' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="inscripcionForm">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Alumno</mat-label>
+      <input matInput formControlName="alumno" required>
+      <mat-error *ngIf="inscripcionForm.get('alumno')?.hasError('required')">El alumno es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Curso</mat-label>
+      <input matInput formControlName="curso" required>
+      <mat-error *ngIf="inscripcionForm.get('curso')?.hasError('required')">El curso es obligatorio</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Fecha de Inscripción</mat-label>
+      <input matInput formControlName="fecha" required placeholder="YYYY-MM-DD">
+      <mat-error *ngIf="inscripcionForm.get('fecha')?.hasError('required')">La fecha es obligatoria</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!inscripcionForm.valid">Guardar</button>
+</mat-dialog-actions>
