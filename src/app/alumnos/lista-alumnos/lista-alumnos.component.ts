@@ -22,7 +22,6 @@ import { AlumnoFormComponent } from '../components/alumno-form.component';
     MatDialogModule,
     MatSnackBarModule,
     MatCardModule,
-    NgIf
   ],
   templateUrl: './lista-alumnos.component.html',
   styleUrls: ['./lista-alumnos.component.scss']
