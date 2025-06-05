@@ -2,134 +2,116 @@
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms'; // ✅ Importar ReactiveFormsModule, FormBuilder, etc.
-import { MatTableModule, MatTableDataSource } from '@angular/material/table'; // ✅ Importar MatTableModule y MatTableDataSource
-import { MatCardModule } from '@angular/material/card'; // ✅ Importar MatCardModule
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon'; // Si usas íconos
-import { MatInputModule } from '@angular/material/input'; // ✅ Importar MatInputModule
-import { MatFormFieldModule } from '@angular/material/form-field'; // ✅ Importar MatFormFieldModule
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+// import { v4 as uuidv4 } from 'uuid'; // Ya no necesitamos uuidv4 porque mockapi.io genera el ID
 
-// Asumo que tienes un servicio de cursos y una interfaz Curso
-// import { CursoService, Curso } from '../services/curso.service';
-
-interface Curso { // Define la interfaz Curso si no la tienes en un servicio
-  id: string;
-  nombre: string;
-  duracion: string;
-  nivel: string;
-}
+import { CursoFormComponent } from '../components/curso-form.component';
+import { CursoService, Curso } from '../services/curso.service'; // ✅ Importar CursoService y Curso
 
 @Component({
   selector: 'app-lista-cursos',
   standalone: true,
   imports: [
     CommonModule,
-    MatTableModule,        // ✅ Añadir MatTableModule
-    MatCardModule,         // ✅ Añadir MatCardModule
+    MatTableModule,
+    MatCardModule,
     MatButtonModule,
-    MatIconModule,         // Si usas MatIcon
-    MatInputModule,        // ✅ Añadir MatInputModule
-    MatFormFieldModule,    // ✅ Añadir MatFormFieldModule
-    ReactiveFormsModule    // ✅ Añadir ReactiveFormsModule
+    MatIconModule,
+    MatSnackBarModule,
+    MatDialogModule
   ],
   templateUrl: './lista-cursos.component.html',
   styleUrls: ['./lista-cursos.component.scss']
 })
 export class ListaCursosComponent implements OnInit {
 
-  // ✅ PROPIEDADES NECESARIAS
-  displayedColumns: string[] = ['nombre', 'duracion', 'nivel', 'acciones']; // Ajusta según tus columnas
+  // ✅ displayedColumns alineadas con tu interfaz Curso en mockapi.io
+  displayedColumns: string[] = ['nombre', 'duracion', 'nivel', 'acciones'];
   dataSource = new MatTableDataSource<Curso>();
-  formularioCurso: FormGroup; // ✅ Propiedad del formulario
-  editandoCursoId: string | null = null; // ✅ Para saber si estamos editando o agregando
 
-  // Asumo que inyectas un servicio de cursos
   constructor(
-    private fb: FormBuilder, // ✅ Inyectar FormBuilder
-    // private cursoService: CursoService // Descomentar si tienes un servicio de cursos
-  ) {
-    // ✅ Inicializar el formulario
-    this.formularioCurso = this.fb.group({
-      nombre: ['', Validators.required],
-      duracion: ['', Validators.required],
-      nivel: ['', Validators.required]
-    });
-  }
+    private snackBar: MatSnackBar,
+    public dialog: MatDialog,
+    private cursoService: CursoService // ✅ Inyectar CursoService
+  ) { }
 
-  // ✅ MÉTODO ngOnInit
   ngOnInit(): void {
     this.cargarCursos();
   }
 
-  // ✅ MÉTODO cargarCursos (ejemplo, adapta a tu servicio)
   cargarCursos(): void {
-    // Ejemplo de datos dummy si no tienes un servicio de cursos aún
-    const dummyCursos: Curso[] = [
-      { id: '1', nombre: 'Angular Básico', duracion: '40 horas', nivel: 'Principiante' },
-      { id: '2', nombre: 'TypeScript Avanzado', duracion: '30 horas', nivel: 'Avanzado' }
-    ];
-    this.dataSource.data = dummyCursos;
-
-    // Si tuvieras un servicio real:
-    // this.cursoService.getCursos().subscribe(cursos => {
-    //   this.dataSource.data = cursos;
-    // });
-  }
-
-  // ✅ MÉTODO guardarCurso
-  guardarCurso(): void {
-    if (this.formularioCurso.valid) {
-      const nuevoCurso: Curso = {
-        ...this.formularioCurso.value,
-        id: this.editandoCursoId || Math.random().toString(36).substring(2, 11) // Genera ID si es nuevo
-      };
-
-      if (this.editandoCursoId) {
-        // Lógica de actualización
-        // this.cursoService.updateCurso(nuevoCurso).subscribe(() => {
-        //   this.cargarCursos();
-        //   this.limpiarFormulario();
-        // });
-        const index = this.dataSource.data.findIndex(c => c.id === nuevoCurso.id);
-        if (index !== -1) {
-          this.dataSource.data[index] = nuevoCurso;
-          this.dataSource._updateChangeSubscription(); // Para refrescar la tabla
-        }
-        console.log('Curso actualizado:', nuevoCurso);
-      } else {
-        // Lógica de adición
-        // this.cursoService.addCurso(nuevoCurso).subscribe(() => {
-        //   this.cargarCursos();
-        //   this.limpiarFormulario();
-        // });
-        this.dataSource.data = [...this.dataSource.data, nuevoCurso];
-        console.log('Curso agregado:', nuevoCurso);
+    // ✅ Usar el servicio para obtener los cursos
+    this.cursoService.obtenerCursos().subscribe({
+      next: (cursos) => {
+        this.dataSource.data = cursos;
+      },
+      error: (error) => {
+        console.error('Error al cargar los cursos:', error);
+        this.snackBar.open('Error al cargar los cursos', 'Cerrar', { duration: 3000 });
       }
-      this.limpiarFormulario();
-    }
+    });
   }
 
-  // ✅ MÉTODO editarCurso
-  editarCurso(curso: Curso): void {
-    this.editandoCursoId = curso.id;
-    this.formularioCurso.patchValue(curso);
+  openAddEditDialog(curso?: Curso): void {
+    const dialogRef = this.dialog.open(CursoFormComponent, {
+      data: curso,
+      width: '450px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) { // Si el diálogo se cerró con datos (se guardó)
+        if (curso && curso.id) {
+          // ✅ Usar el servicio para editar
+          this.cursoService.editarCurso(curso.id, result).subscribe({
+            next: () => {
+              this.snackBar.open('Curso actualizado con éxito', 'Cerrar', { duration: 2000 });
+              this.cargarCursos(); // Volver a cargar para reflejar los cambios
+            },
+            error: (error) => {
+              console.error('Error al actualizar curso:', error);
+              this.snackBar.open('Error al actualizar curso', 'Cerrar', { duration: 3000 });
+            }
+          });
+        } else {
+          // ✅ Usar el servicio para agregar
+          // Omit<Curso, 'id'> porque el ID lo genera el backend
+          this.cursoService.agregarCurso(result as Omit<Curso, 'id'>).subscribe({
+            next: () => {
+              this.snackBar.open('Curso agregado con éxito', 'Cerrar', { duration: 2000 });
+              this.cargarCursos(); // Volver a cargar para reflejar el nuevo curso
+            },
+            error: (error) => {
+              console.error('Error al agregar curso:', error);
+              this.snackBar.open('Error al agregar curso', 'Cerrar', { duration: 3000 });
+            }
+          });
+        }
+      }
+    });
   }
 
-  // ✅ MÉTODO eliminarCurso
-  eliminarCurso(id: string): void {
+  editCurso(curso: Curso): void {
+    this.openAddEditDialog(curso);
+  }
+
+  deleteCurso(id: string): void {
     if (confirm('¿Estás seguro de que quieres eliminar este curso?')) {
-      // this.cursoService.deleteCurso(id).subscribe(() => {
-      //   this.cargarCursos();
-      // });
-      this.dataSource.data = this.dataSource.data.filter(c => c.id !== id);
-      console.log('Curso eliminado:', id);
+      // ✅ Usar el servicio para eliminar
+      this.cursoService.eliminarCurso(id).subscribe({
+        next: () => {
+          this.snackBar.open('Curso eliminado con éxito', 'Cerrar', { duration: 2000 });
+          this.cargarCursos(); // Volver a cargar para reflejar los cambios
+        },
+        error: (error) => {
+          console.error('Error al eliminar curso:', error);
+          this.snackBar.open('Error al eliminar curso', 'Cerrar', { duration: 3000 });
+        }
+      });
     }
-  }
-
-  // ✅ Método para limpiar el formulario
-  limpiarFormulario(): void {
-    this.formularioCurso.reset();
-    this.editandoCursoId = null;
   }
 }
